@@ -1,20 +1,22 @@
+import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+
+import { LoginScreen } from './src/screens/LoginScreen';
+import { WelcomeScreen } from './src/screens/WelcomeScreen';
+
+type ScreenName = 'welcome' | 'login';
 
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <>
+      {currentScreen === 'welcome' ? (
+        <WelcomeScreen onStart={() => setCurrentScreen('login')} />
+      ) : (
+        <LoginScreen onBack={() => setCurrentScreen('welcome')} />
+      )}
+      <StatusBar style="dark" />
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
