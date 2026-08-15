@@ -7,6 +7,7 @@ import { colors } from '../theme/colors';
 
 type LoginScreenProps = {
   onBack: () => void;
+  onLoginSuccess: () => void;
 };
 
 type LoginErrors = {
@@ -35,7 +36,7 @@ function validateLogin(email: string, password: string): LoginErrors {
   return errors;
 }
 
-export function LoginScreen({ onBack }: LoginScreenProps) {
+export function LoginScreen({ onBack, onLoginSuccess }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<LoginErrors>({});
@@ -64,6 +65,7 @@ export function LoginScreen({ onBack }: LoginScreenProps) {
 
     setErrors({});
     setSuccessMessage('Formulario válido. Bienvenido a GarageLink.');
+    onLoginSuccess();
   };
 
   return (
