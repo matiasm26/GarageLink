@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '../components/PrimaryButton';
 import { colors } from '../theme/colors';
@@ -59,6 +59,7 @@ export function ServiceListScreen({ records, onCreateNew, onLogout, storageError
               </View>
 
               <Text style={styles.recordDescription}>{record.description}</Text>
+              {record.imageUri ? <Image source={{ uri: record.imageUri }} style={styles.recordImage} /> : null}
               <Text style={styles.recordMeta}>Creado: {new Date(record.createdAt).toLocaleDateString('es-CL')}</Text>
               {record.location ? (
                 <Text style={styles.recordMeta}>
@@ -182,6 +183,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     lineHeight: 22,
+  },
+  recordImage: {
+    borderRadius: 16,
+    height: 160,
+    width: '100%',
   },
   recordMeta: {
     color: colors.muted,

@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import { FormInput } from '../components/FormInput';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -44,6 +45,12 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
   const [location, setLocation] = useState<ServiceLocation | undefined>(undefined);
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
   const [locationMessage, setLocationMessage] = useState('La ubicación es opcional y se solicitará solo al pulsar el botón.');
+  const cameraRef = useRef<CameraView>(null);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [imageUri, setImageUri] = useState<string | undefined>(undefined);
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
+  const [cameraMessage, setCameraMessage] = useState('La foto es opcional y se solicitará permiso al usar la cámara.');
+  const [isTakingPhoto, setIsTakingPhoto] = useState(false);
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -72,6 +79,53 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
     setLocation(undefined);
   };
 
+  const handleOpenCamera = () => {
+    setIsCameraVisible(true);
+    setCameraMessage('Prepara la cámara para asociar una foto al servicio.');
+  };
+
+  const handleRequestCameraPermission = async () => {
+    setCameraMessage('Solicitando permiso de cámara...');
+
+    const permission = await requestCameraPermission();
+
+    if (permission.granted) {
+      setCameraMessage('Permiso concedido. Puedes tomar la foto del servicio.');
+      return;
+    }
+
+    setCameraMessage('Permiso de cámara denegado. Puedes guardar el servicio sin foto.');
+  };
+
+  const handleTakePhoto = async () => {
+    const camera = cameraRef.current;
+
+    if (!camera) {
+      setCameraMessage('La cámara aún no está lista. Intenta nuevamente.');
+      return;
+    }
+
+    setIsTakingPhoto(true);
+    setCameraMessage('Tomando foto...');
+
+    try {
+      const photo = await camera.takePictureAsync({ quality: 0.7 });
+
+      if (!photo?.uri) {
+        setCameraMessage('No se pudo obtener la foto. Puedes guardar el servicio sin imagen.');
+        return;
+      }
+
+      setImageUri(photo.uri);
+      setIsCameraVisible(false);
+      setCameraMessage('Foto asociada al servicio.');
+    } catch {
+      setCameraMessage('No se pudo tomar la foto. Puedes guardar el servicio sin imagen.');
+    } finally {
+      setIsTakingPhoto(false);
+    }
+  };
+
   const handleSubmit = () => {
     const nextErrors = validateServiceForm(title, description);
 
@@ -82,6 +136,7 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
 
     onSubmit({
       description: description.trim(),
+      imageUri,
       location,
       status,
       title: title.trim(),
@@ -164,6 +219,62 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
                 Latitud: {location.latitude.toFixed(5)} | Longitud: {location.longitude.toFixed(5)}
               </Text>
             ) : null}
+          </View>
+
+          <View style={styles.cameraSection}>
+            <Text style={styles.statusLabel}>Foto del servicio</Text>
+            <Text style={styles.locationHelp}>Captura una imagen opcional y asóciala al registro.</Text>
+            {imageUri ? <Image source={{ uri: imageUri }} style={styles.photoPreview} /> : null}
+            <Pressable style={({ pressed }) => [styles.locationButton, pressed ? styles.locationButtonPressed : null]} onPress={handleOpenCamera}>
+              <Text style={styles.locationButtonText}>{imageUri ? 'Cambiar foto' : 'Tomar foto'}</Text>
+            </Pressable>
+
+            {isCameraVisible ? (
+              <View style={styles.cameraBox}>
+                {!cameraPermission ? <Text style={styles.locationMessage}>Cargando permisos de cámara...</Text> : null}
+
+                {cameraPermission && !cameraPermission.granted ? (
+                  <View style={styles.cameraPermissionBox}>
+                    <Text style={styles.locationMessage}>GarageLink necesita permiso para abrir la cámara.</Text>
+                    <Pressable style={styles.locationButton} onPress={handleRequestCameraPermission}>
+                      <Text style={styles.locationButtonText}>Permitir cámara</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+
+                {cameraPermission?.granted ? (
+                  <View style={styles.cameraPreviewBox}>
+                    <CameraView ref={cameraRef} style={styles.cameraPreview} facing="back" />
+                    <View style={styles.cameraActions}>
+                      <Pressable
+                        disabled={isTakingPhoto}
+                        style={({ pressed }) => [
+                          styles.locationButton,
+                          pressed ? styles.locationButtonPressed : null,
+                          isTakingPhoto ? styles.locationButtonDisabled : null,
+                        ]}
+                        onPress={handleTakePhoto}
+                      >
+                        <Text style={styles.locationButtonText}>{isTakingPhoto ? 'Tomando foto...' : 'Capturar'}</Text>
+                      </Pressable>
+                      <Pressable style={styles.closeCameraButton} onPress={() => setIsCameraVisible(false)}>
+                        <Text style={styles.closeCameraButtonText}>Cerrar cámara</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+
+            <Text
+              style={[
+                styles.locationMessage,
+                imageUri ? styles.locationMessageSuccess : null,
+                cameraMessage.includes('denegado') || cameraMessage.includes('No se pudo') ? styles.locationMessageError : null,
+              ]}
+            >
+              {cameraMessage}
+            </Text>
           </View>
         </View>
 
@@ -287,5 +398,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
+  },
+  cameraSection: {
+    gap: 10,
+  },
+  photoPreview: {
+    borderRadius: 16,
+    height: 180,
+    width: '100%',
+  },
+  cameraBox: {
+    gap: 12,
+  },
+  cameraPermissionBox: {
+    gap: 10,
+  },
+  cameraPreviewBox: {
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  cameraPreview: {
+    height: 280,
+    width: '100%',
+  },
+  cameraActions: {
+    backgroundColor: colors.card,
+    gap: 10,
+    padding: 12,
+  },
+  closeCameraButton: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  closeCameraButtonText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

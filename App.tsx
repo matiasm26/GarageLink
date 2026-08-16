@@ -53,6 +53,7 @@ export default function App() {
       createdAt: new Date().toISOString(),
       description: input.description,
       id: `service-${Date.now()}-${serviceRecords.length + 1}`,
+      ...(input.imageUri ? { imageUri: input.imageUri } : {}),
       ...(input.location ? { location: input.location } : {}),
       status: input.status,
       synced: false,
