@@ -22,8 +22,8 @@ El proyecto usa React Native, Expo SDK 57 y TypeScript. No usa backend propio ni
 10. Ejecución
 11. Relación con la rúbrica U2
 11. Limitaciones conocidas
-13. Historial de commits
-14. Arnés agéntico
+12. Historial de commits
+13. Arnés agéntico
 
 ---
 
@@ -530,7 +530,7 @@ npm test
 
 ---
 
-## 13. Historial de commits
+## 12. Historial de commits
 
 ```text
 8f74776 Initial commit
@@ -553,7 +553,7 @@ El historial muestra evolución incremental: documentación inicial, flujo base,
 
 ---
 
-## 14. Arnés agéntico
+## 13. Arnés agéntico
 
 Archivos de contexto:
 
