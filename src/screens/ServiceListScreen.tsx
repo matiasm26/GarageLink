@@ -6,17 +6,33 @@ import type { ServiceRecord } from '../types/serviceRecord';
 import { serviceStatusLabels } from '../types/serviceRecord';
 
 type StorageStatus = 'loading' | 'ready' | 'error';
+type ApiStatus = 'idle' | 'loading' | 'success' | 'error';
+
 
 type ServiceListScreenProps = {
+  apiMessage: string;
+  apiStatus: ApiStatus;
   records: ServiceRecord[];
   onCreateNew: () => void;
+  onImportFromApi: () => void;
+  onSyncWithApi: () => void;
   onLogout: () => void;
   storageError: string;
   storageStatus: StorageStatus;
 };
 
 
-export function ServiceListScreen({ records, onCreateNew, onLogout, storageError, storageStatus }: ServiceListScreenProps) {
+export function ServiceListScreen({
+  apiMessage,
+  apiStatus,
+  records,
+  onCreateNew,
+  onImportFromApi,
+  onLogout,
+  onSyncWithApi,
+  storageError,
+  storageStatus,
+}: ServiceListScreenProps) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerCard}>
@@ -38,6 +54,43 @@ export function ServiceListScreen({ records, onCreateNew, onLogout, storageError
             <Text style={styles.errorText}>{storageError}</Text>
           </View>
         ) : null}
+
+        <View style={styles.apiBox}>
+          <Text style={styles.apiTitle}>API externa</Text>
+          <Text
+            style={[
+              styles.apiMessage,
+              apiStatus === 'success' ? styles.apiMessageSuccess : null,
+              apiStatus === 'error' ? styles.apiMessageError : null,
+            ]}
+          >
+            {apiMessage}
+          </Text>
+          <View style={styles.apiActions}>
+            <Pressable
+              disabled={apiStatus === 'loading'}
+              style={({ pressed }) => [
+                styles.apiButton,
+                pressed ? styles.apiButtonPressed : null,
+                apiStatus === 'loading' ? styles.apiButtonDisabled : null,
+              ]}
+              onPress={onImportFromApi}
+            >
+              <Text style={styles.apiButtonText}>Importar API</Text>
+            </Pressable>
+            <Pressable
+              disabled={apiStatus === 'loading'}
+              style={({ pressed }) => [
+                styles.apiButton,
+                pressed ? styles.apiButtonPressed : null,
+                apiStatus === 'loading' ? styles.apiButtonDisabled : null,
+              ]}
+              onPress={onSyncWithApi}
+            >
+              <Text style={styles.apiButtonText}>Sincronizar</Text>
+            </Pressable>
+          </View>
+        </View>
 
         <PrimaryButton title="Nuevo servicio" onPress={onCreateNew} />
       </View>
@@ -66,6 +119,7 @@ export function ServiceListScreen({ records, onCreateNew, onLogout, storageError
                   Ubicación: {record.location.latitude.toFixed(5)}, {record.location.longitude.toFixed(5)}
                 </Text>
               ) : null}
+              <Text style={styles.recordMeta}>{record.synced ? 'Sincronizado con API' : 'Pendiente de sincronizar'}</Text>
             </View>
           ))}
         </View>
@@ -129,6 +183,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
+  },
+  apiBox: {
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    gap: 10,
+    padding: 16,
+  },
+  apiTitle: {
+    color: colors.primary,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  apiMessage: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  apiMessageSuccess: {
+    color: colors.success,
+    fontWeight: '700',
+  },
+  apiMessageError: {
+    color: colors.error,
+    fontWeight: '700',
+  },
+  apiActions: {
+    gap: 10,
+  },
+  apiButton: {
+    alignItems: 'center',
+    borderColor: colors.primary,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  apiButtonPressed: {
+    opacity: 0.82,
+  },
+  apiButtonDisabled: {
+    opacity: 0.56,
+  },
+  apiButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
   },
   emptyCard: {
     backgroundColor: colors.card,

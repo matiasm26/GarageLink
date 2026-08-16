@@ -5,6 +5,7 @@ import { LoginScreen } from './src/screens/LoginScreen';
 import { ServiceFormScreen } from './src/screens/ServiceFormScreen';
 import { ServiceListScreen } from './src/screens/ServiceListScreen';
 import { WelcomeScreen } from './src/screens/WelcomeScreen';
+import { importServiceRecordsFromApi, syncServiceRecordsWithApi } from './src/services/apiService';
 import { loadServiceRecords, saveServiceRecords } from './src/services/storageService';
 import type { ServiceRecord, ServiceRecordInput } from './src/types/serviceRecord';
 
@@ -16,6 +17,8 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [storageStatus, setStorageStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [storageError, setStorageError] = useState('');
+  const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [apiMessage, setApiMessage] = useState('API externa lista para importar o sincronizar registros.');
 
   useEffect(() => {
     let isMounted = true;
@@ -48,6 +51,17 @@ export default function App() {
     };
   }, []);
 
+  const persistServiceRecords = async (recordsToSave: ServiceRecord[]) => {
+    try {
+      await saveServiceRecords(recordsToSave);
+      setStorageStatus('ready');
+      setStorageError('');
+    } catch {
+      setStorageStatus('error');
+      setStorageError('No se pudo guardar el registro en el dispositivo.');
+    }
+  };
+
   const handleServiceSubmit = async (input: ServiceRecordInput) => {
     const nextRecord: ServiceRecord = {
       createdAt: new Date().toISOString(),
@@ -64,13 +78,56 @@ export default function App() {
     setServiceRecords(nextRecords);
     setCurrentScreen('serviceList');
 
+    await persistServiceRecords(nextRecords);
+  };
+
+  const handleImportFromApi = async () => {
+    setApiStatus('loading');
+    setApiMessage('Importando registros desde la API externa...');
+
     try {
-      await saveServiceRecords(nextRecords);
-      setStorageStatus('ready');
-      setStorageError('');
-    } catch {
-      setStorageStatus('error');
-      setStorageError('No se pudo guardar el registro en el dispositivo.');
+      const result = await importServiceRecordsFromApi();
+      const newRecords = result.records.filter(
+        (record) => !serviceRecords.some((currentRecord) => currentRecord.id === record.id),
+      );
+      const nextRecords = [...newRecords, ...serviceRecords];
+
+      if (newRecords.length > 0) {
+        setServiceRecords(nextRecords);
+        await persistServiceRecords(nextRecords);
+      }
+
+      setApiStatus('success');
+      setApiMessage(
+        `Importación finalizada: ${newRecords.length} registros nuevos. ${result.invalidCount} registros inválidos ignorados.`,
+      );
+    } catch (error) {
+      setApiStatus('error');
+      setApiMessage(error instanceof Error ? error.message : 'No se pudieron importar registros desde la API.');
+    }
+  };
+
+  const handleSyncWithApi = async () => {
+    if (serviceRecords.length === 0) {
+      setApiStatus('error');
+      setApiMessage('No hay registros locales para sincronizar.');
+      return;
+    }
+
+    setApiStatus('loading');
+    setApiMessage('Sincronizando registros locales con la API externa...');
+
+    try {
+      const result = await syncServiceRecordsWithApi(serviceRecords);
+      const syncedRecords = serviceRecords.map((record) => ({ ...record, synced: true }));
+
+      setServiceRecords(syncedRecords);
+      await persistServiceRecords(syncedRecords);
+      setApiStatus('success');
+      setApiMessage(`Sincronización enviada correctamente. ID remoto de prueba: ${result.remoteId}.`);
+    } catch (error) {
+      setApiStatus('error');
+      setApiMessage(error instanceof Error ? error.message : 'No se pudieron sincronizar los registros.');
     }
   };
 
@@ -105,6 +162,10 @@ export default function App() {
 
     return (
       <ServiceListScreen
+        apiMessage={apiMessage}
+        apiStatus={apiStatus}
+        onImportFromApi={handleImportFromApi}
+        onSyncWithApi={handleSyncWithApi}
         records={serviceRecords}
         onCreateNew={() => setCurrentScreen('serviceForm')}
         onLogout={handleLogout}
