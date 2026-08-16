@@ -7,17 +7,17 @@ import { serviceStatusLabels } from '../types/serviceRecord';
 
 type ServiceListScreenProps = {
   records: ServiceRecord[];
-  onBack: () => void;
   onCreateNew: () => void;
+  onLogout: () => void;
 };
 
 
-export function ServiceListScreen({ records, onBack, onCreateNew }: ServiceListScreenProps) {
+export function ServiceListScreen({ records, onCreateNew, onLogout }: ServiceListScreenProps) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerCard}>
-        <Pressable style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>Volver</Text>
+        <Pressable style={styles.backButton} onPress={onLogout}>
+          <Text style={styles.backButtonText}>Cerrar sesión</Text>
         </Pressable>
 
         <Text style={styles.title}>Servicios del taller</Text>

@@ -12,6 +12,7 @@ type ScreenName = 'welcome' | 'login' | 'serviceList' | 'serviceForm';
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
   const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleServiceSubmit = (input: ServiceRecordInput) => {
     setServiceRecords((currentRecords) => {
@@ -29,18 +30,29 @@ export default function App() {
     setCurrentScreen('serviceList');
   };
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setCurrentScreen('serviceList');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentScreen('login');
+  };
+
   const renderScreen = () => {
+    const needsAuthentication = currentScreen === 'serviceList' || currentScreen === 'serviceForm';
+
+    if (needsAuthentication && !isAuthenticated) {
+      return <LoginScreen onBack={() => setCurrentScreen('welcome')} onLoginSuccess={handleLoginSuccess} />;
+    }
+
     if (currentScreen === 'welcome') {
       return <WelcomeScreen onStart={() => setCurrentScreen('login')} />;
     }
 
     if (currentScreen === 'login') {
-      return (
-        <LoginScreen
-          onBack={() => setCurrentScreen('welcome')}
-          onLoginSuccess={() => setCurrentScreen('serviceList')}
-        />
-      );
+      return <LoginScreen onBack={() => setCurrentScreen('welcome')} onLoginSuccess={handleLoginSuccess} />;
     }
 
     if (currentScreen === 'serviceForm') {
@@ -50,8 +62,8 @@ export default function App() {
     return (
       <ServiceListScreen
         records={serviceRecords}
-        onBack={() => setCurrentScreen('login')}
         onCreateNew={() => setCurrentScreen('serviceForm')}
+        onLogout={handleLogout}
       />
     );
   };
