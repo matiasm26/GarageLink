@@ -5,14 +5,18 @@ import { colors } from '../theme/colors';
 import type { ServiceRecord } from '../types/serviceRecord';
 import { serviceStatusLabels } from '../types/serviceRecord';
 
+type StorageStatus = 'loading' | 'ready' | 'error';
+
 type ServiceListScreenProps = {
   records: ServiceRecord[];
   onCreateNew: () => void;
   onLogout: () => void;
+  storageError: string;
+  storageStatus: StorageStatus;
 };
 
 
-export function ServiceListScreen({ records, onCreateNew, onLogout }: ServiceListScreenProps) {
+export function ServiceListScreen({ records, onCreateNew, onLogout, storageError, storageStatus }: ServiceListScreenProps) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerCard}>
@@ -22,6 +26,18 @@ export function ServiceListScreen({ records, onCreateNew, onLogout }: ServiceLis
 
         <Text style={styles.title}>Servicios del taller</Text>
         <Text style={styles.subtitle}>Registra y revisa las tareas de GarageLink para la Evaluación U2.</Text>
+
+        {storageStatus === 'loading' ? (
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>Cargando registros guardados...</Text>
+          </View>
+        ) : null}
+
+        {storageStatus === 'error' ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{storageError}</Text>
+          </View>
+        ) : null}
 
         <PrimaryButton title="Nuevo servicio" onPress={onCreateNew} />
       </View>
@@ -84,6 +100,29 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 17,
     lineHeight: 25,
+  },
+  infoBox: {
+    backgroundColor: colors.successBackground,
+    borderRadius: 16,
+    padding: 14,
+  },
+  infoText: {
+    color: colors.success,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  errorBox: {
+    borderColor: colors.error,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
   },
   emptyCard: {
     backgroundColor: colors.card,
