@@ -514,20 +514,6 @@ npm test
 
 ---
 
-## 11. Relación con la rúbrica U2
-
-La rúbrica U2 evalúa periféricos, permisos, pruebas, API externa y seguridad/fiabilidad del manejo de datos.
-
-| Indicador de rúbrica | Evidencia en GarageLink U2 |
-|---|---|
-| Funcionalidades con periféricos | Cámara con `expo-camera`; GPS con `expo-location`; foto y ubicación asociadas a registros de servicio. |
-| Permisos de usuario | Cámara y ubicación se solicitan solo por acción del usuario; se manejan permisos denegados sin bloquear guardado. |
-| Pruebas de periféricos | Tests de GPS, cámara y persistencia de imagen; casos de éxito, denegación y error. |
-| Integración con servicios web/APIs | Importación desde JSONPlaceholder; sincronización con `POST`; validación de datos externos. |
-| Pruebas de API | Tests para éxito, HTTP error, error de red, datos inválidos y respuesta de sincronización inválida. |
-| Fiabilidad y manejo de datos | AsyncStorage valida registros; API descarta datos inválidos; errores no destruyen registros locales. |
-
----
 
 ## 12. Limitaciones conocidas
 
