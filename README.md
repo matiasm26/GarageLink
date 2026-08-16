@@ -1,295 +1,598 @@
-# 🚗 GarageLink
+# GarageLink U2
 
-> **Evaluación Unidad 1 – Ingeniería de Arnés Agéntico**  
+> Evaluación Unidad 2 - Desarrollo de Aplicaciones Móviles
 
----
+GarageLink es un prototipo móvil para registrar servicios de taller mecánico. La versión U2 amplía el flujo original de bienvenida e inicio de sesión con registros de servicio, persistencia local, cámara, GPS, importación/sincronización con API externa y pruebas automatizadas.
 
-# Descripción
-
-GarageLink es un prototipo de aplicación móvil desarrollado con **React Native**, **Expo SDK 57** y **TypeScript**.
-
-Su propósito es representar una futura plataforma para la gestión de talleres mecánicos, permitiendo administrar clientes, vehículos y servicios desde dispositivos móviles.
-
-La versión desarrollada para esta evaluación implementa un flujo simple compuesto por:
-
-- Pantalla de bienvenida.
-- Pantalla de inicio de sesión.
-- Validación local del formulario.
-- Mensajes de retroalimentación para el usuario.
-
-No existe autenticación contra un servidor, ya que el objetivo principal de la evaluación es demostrar el proceso de desarrollo utilizando un **arnés agéntico**.
+El proyecto usa React Native, Expo SDK 57 y TypeScript. No usa backend propio ni autenticación real contra servidor; mantiene el alcance educativo definido para la evaluación.
 
 ---
 
-# Contenido
+## Contenido
 
-1. Objetivo de la aplicación
-2. Estructura del proyecto
-3. Justificación de decisiones
-4. Proveedor y modelos de IA
-5. Constitución del arnés agéntico
-6. Instrucciones de ejecución
-7. Historial de desarrollo
-8. Evidencias del arnés
-9. Autor
-
----
-
-# 1. Objetivo de la aplicación
-
-GarageLink corresponde al prototipo de una aplicación móvil orientada a la administración de talleres automotrices.
-
-En una versión futura podría permitir:
-
-- Registro de clientes.
-- Registro de vehículos.
-- Historial de mantenciones.
-- Agenda de trabajos.
-- Gestión de órdenes de trabajo.
-- Seguimiento de reparaciones.
-- Comunicación entre cliente y taller.
-
-Para esta evaluación únicamente se desarrolló un flujo funcional compuesto por una pantalla de bienvenida y un formulario de inicio de sesión con validaciones locales.
+1. Estado actual del proyecto
+2. Arquitectura
+3. Funcionalidades implementadas
+4. Permisos y privacidad
+5. Almacenamiento local
+6. Cámara y persistencia de fotografías
+7. GPS
+8. API externa
+9. Pruebas automatizadas
+10. Ejecución
+11. Relación con la rúbrica U2
+12. Limitaciones conocidas
+13. Historial de commits
+14. Arnés agéntico
 
 ---
 
-# 2. Estructura del proyecto
+## 1. Estado actual del proyecto
+
+GarageLink U2 implementa un flujo completo de uso local:
+
+```text
+Bienvenida
+  -> Login local
+  -> Lista de servicios
+  -> Crear servicio
+  -> Guardar registro local
+  -> Ver registros guardados
+  -> Importar registros desde API
+  -> Sincronizar registros con API
+```
+
+La aplicación permite:
+
+- iniciar sesión mediante validación local de correo y contraseña;
+- proteger la lista de servicios detrás del estado de sesión;
+- cerrar sesión;
+- crear registros de servicio con título, descripción y estado;
+- guardar servicios en memoria y en AsyncStorage;
+- conservar registros después de recargar la aplicación;
+- obtener ubicación GPS opcional;
+- capturar fotografía opcional;
+- persistir fotografías capturadas con `expo-file-system`;
+- importar datos desde una API externa;
+- sincronizar registros locales con una API externa;
+- ejecutar pruebas automatizadas de servicios, cámara, GPS, storage y API.
+
+---
+
+## 2. Arquitectura
+
+La arquitectura se mantiene simple y explicable. No se agregó React Navigation; la navegación se controla en `App.tsx` con estado local tipado.
 
 ```text
 GarageLink
-│
-├── assets/
-│
-├── prompts/
-│   └── 01-planificacion-inicial.md
-│
-├── src/
-│   ├── components/
-│   │   ├── FormInput.tsx
-│   │   └── PrimaryButton.tsx
-│   │
-│   ├── screens/
-│   │   ├── WelcomeScreen.tsx
-│   │   └── LoginScreen.tsx
-│   │
-│   └── theme/
-│       └── colors.ts
-│
-├── AGENTS.md
-├── CLAUDE.md
-├── RULES.md
-├── App.tsx
-├── package.json
-└── README.md
+|
+|-- App.tsx
+|-- app.json
+|-- package.json
+|-- tsconfig.json
+|-- AGENTS.md
+|-- RULES.md
+|-- CLAUDE.md
+|-- README.md
+|
+|-- assets/
+|-- prompts/
+|
+|-- __mocks__/
+|   |-- expo-camera.tsx
+|
+|-- src/
+    |-- components/
+    |   |-- FormInput.tsx
+    |   |-- PrimaryButton.tsx
+    |
+    |-- screens/
+    |   |-- WelcomeScreen.tsx
+    |   |-- LoginScreen.tsx
+    |   |-- ServiceListScreen.tsx
+    |   |-- ServiceFormScreen.tsx
+    |   |-- __tests__/
+    |       |-- ServiceFormScreen-camera-test.tsx
+    |
+    |-- services/
+    |   |-- apiService.ts
+    |   |-- imageService.ts
+    |   |-- locationService.ts
+    |   |-- storageService.ts
+    |   |-- __tests__/
+    |       |-- apiService-test.ts
+    |       |-- imageService-test.ts
+    |       |-- locationService-test.ts
+    |       |-- storageService-test.ts
+    |
+    |-- theme/
+    |   |-- colors.ts
+    |
+    |-- types/
+        |-- serviceRecord.ts
 ```
 
-### Organización
+### Responsabilidades principales
 
-| Carpeta / Archivo | Descripción |
-|-------------------|-------------|
-| `src/components` | Componentes reutilizables. |
-| `src/screens` | Pantallas de la aplicación. |
-| `src/theme` | Configuración de colores y estilos. |
-| `prompts` | Prompts utilizados durante la planificación. |
-| `AGENTS.md` | Contexto principal del agente. |
-| `CLAUDE.md` | Archivo de contexto utilizado por el arnés. |
-| `RULES.md` | Reglas y restricciones del desarrollo. |
-
----
-
-# 3. Justificación de decisiones
-
-## Expo Blank + TypeScript
-
-Se seleccionó el template **Blank** de Expo con TypeScript debido a que proporciona una base limpia y sencilla para el desarrollo, evitando dependencias innecesarias.
+| Archivo | Responsabilidad |
+|---|---|
+| `App.tsx` | Estado principal de navegación, sesión, registros, carga inicial, guardado local e integración API. |
+| `WelcomeScreen.tsx` | Pantalla inicial y entrada al flujo. |
+| `LoginScreen.tsx` | Validación local de correo y contraseña. |
+| `ServiceListScreen.tsx` | Lista de registros, cierre de sesión, importación y sincronización API. |
+| `ServiceFormScreen.tsx` | Formulario de creación, cámara, GPS y envío de registro. |
+| `storageService.ts` | Persistencia y validación de registros con AsyncStorage. |
+| `locationService.ts` | Solicitud de permiso foreground y lectura de ubicación GPS. |
+| `imageService.ts` | Copia de fotos nativas a almacenamiento persistente con `expo-file-system`. |
+| `apiService.ts` | Importación y sincronización con API externa usando `fetch`. |
+| `serviceRecord.ts` | Tipos compartidos para registros, ubicación y estados. |
 
 ---
 
-## Navegación
+## 3. Funcionalidades implementadas
 
-No se utilizó React Navigation.
+### Bienvenida
 
-Debido a que el proyecto solamente requiere dos pantallas, la navegación fue implementada mediante estado local (`useState`), reduciendo la complejidad del proyecto.
+Archivo:
 
----
+```text
+src/screens/WelcomeScreen.tsx
+```
 
-## Componentes reutilizables
+Incluye:
 
-Se implementaron componentes reutilizables para:
+- marca GarageLink;
+- descripción del prototipo;
+- beneficios del sistema;
+- botón para comenzar.
 
-- botones
-- campos de entrada
+### Login local
 
-con el objetivo de evitar duplicación de código y facilitar futuras modificaciones.
+Archivo:
 
----
+```text
+src/screens/LoginScreen.tsx
+```
 
-## Librerías
+Incluye:
 
-No se incorporaron librerías adicionales para navegación o validación.
+- campo correo;
+- campo contraseña;
+- validación de correo;
+- validación de contraseña mínima de 6 caracteres;
+- mensajes de error;
+- mensaje de éxito;
+- transición a la lista de servicios.
 
-Únicamente se instalaron las dependencias necesarias para ejecutar la aplicación en navegador durante el desarrollo:
+No existe autenticación real con servidor. El login es local y educativo.
 
-- react-dom
-- react-native-web
-- @expo/metro-runtime
+### Sesión local y cierre de sesión
 
----
+Archivo:
 
-# 4. Proveedor y modelos de IA utilizados
+```text
+App.tsx
+```
 
-Durante el desarrollo se utilizaron distintas herramientas de inteligencia artificial con funciones complementarias.
+Incluye:
 
-## ChatGPT
+- estado `isAuthenticated`;
+- acceso a registros solo con sesión iniciada;
+- cierre de sesión desde la lista;
+- retorno a login tras cerrar sesión.
 
-**Proveedor**
+### Registros de servicio
 
-OpenAI
+Archivos:
 
-**Modelo**
+```text
+src/screens/ServiceListScreen.tsx
+src/screens/ServiceFormScreen.tsx
+src/types/serviceRecord.ts
+```
 
-GPT-5.5
+Cada registro contiene:
 
-**Utilización**
+```text
+id
+title
+description
+status
+createdAt
+imageUri opcional
+location opcional
+synced
+```
 
-- planificación del proyecto
-- diseño de arquitectura
-- diseño del arnés agéntico
-- generación y revisión de documentación
-- resolución de problemas
-- apoyo técnico durante el desarrollo
-- organización del flujo de trabajo
+Estados disponibles:
 
----
+```text
+pendiente
+en_proceso
+completado
+```
 
-## OMP (Oh My Pi Coding Harness)
+La lista muestra:
 
-**Herramienta**
-
-OMP ejecutándose dentro de Warp.
-
-**Proveedor configurado**
-
-OpenAI Codex
-
-**Modelo**
-
-openai-codex/gpt-5.5
-
-**Utilización**
-
-- lectura del contexto del proyecto
-- implementación de componentes
-- implementación de pantallas
-- verificación del proyecto mediante TypeScript
-- ejecución de comandos Git
-- creación de commits autorizados
-
----
-
-# 5. Constitución del arnés agéntico
-
-El proyecto fue desarrollado utilizando un arnés agéntico construido específicamente para esta evaluación.
-
-El objetivo del arnés fue establecer contexto, reglas y un flujo de trabajo antes de comenzar la implementación.
-
-## Archivos del arnés
-
-| Archivo | Función |
-|----------|---------|
-| `AGENTS.md` | Define el contexto principal del proyecto y las instrucciones generales para el agente. |
-| `CLAUDE.md` | Archivo de contexto utilizado por el arnés para cargar las instrucciones del proyecto. |
-| `RULES.md` | Contiene reglas y restricciones que el agente debía respetar durante el desarrollo. |
-| `prompts/01-planificacion-inicial.md` | Prompt utilizado para solicitar la planificación inicial del proyecto antes de escribir código. |
+- título;
+- descripción;
+- estado;
+- fecha de creación;
+- fotografía si existe;
+- coordenadas si existen;
+- estado de sincronización.
 
 ---
 
-## Reglas principales definidas
+## 4. Permisos y privacidad
 
-Entre las principales reglas del arnés se encuentran:
+GarageLink solicita permisos solo cuando el usuario ejecuta una acción relacionada.
 
-- Utilizar TypeScript.
-- No utilizar `any`.
-- No utilizar `@ts-ignore`.
-- No instalar dependencias sin autorización.
-- No realizar commits sin autorización.
-- Verificar TypeScript después de cambios importantes.
-- Mantener soluciones simples y fáciles de mantener.
+| Permiso | Dependencia | Cuándo se solicita | Comportamiento si se deniega |
+|---|---|---|---|
+| Cámara | `expo-camera` | Al pulsar `Tomar foto` y luego `Permitir cámara`. | Permite guardar el servicio sin foto. |
+| Ubicación foreground | `expo-location` | Al pulsar `Obtener ubicación`. | Permite guardar el servicio sin GPS. |
 
----
+Decisiones de privacidad:
 
-## Flujo de trabajo
-
-El desarrollo siguió el siguiente proceso:
-
-1. Configuración del arnés.
-2. Definición de reglas.
-3. Planificación del proyecto.
-4. Revisión manual del plan.
-5. Implementación por etapas.
-6. Validación manual del resultado.
-7. Verificación mediante TypeScript.
-8. Registro del progreso mediante commits independientes.
-
-De esta forma, la inteligencia artificial actuó como un asistente de desarrollo guiado por reglas previamente definidas y supervisado durante todo el proceso.
+- no se solicita ubicación al abrir la app;
+- no se usa ubicación en segundo plano;
+- no se accede a cámara sin acción del usuario;
+- no se guardan contraseñas reales;
+- no se usan tokens ni secretos;
+- los registros quedan en almacenamiento local del dispositivo;
+- la API usada es pública y demostrativa.
 
 ---
 
-# 6. Instrucciones de ejecución
+## 5. Almacenamiento local
 
-## Instalar dependencias
+Dependencia:
+
+```text
+@react-native-async-storage/async-storage 2.2.0
+```
+
+Archivo:
+
+```text
+src/services/storageService.ts
+```
+
+Clave usada:
+
+```text
+@garagelink/service-records
+```
+
+AsyncStorage guarda solo datos serializables del registro. Las imágenes no se guardan como base64 dentro de AsyncStorage; solo se guarda la ruta `imageUri` persistente.
+
+Ejemplo conceptual:
+
+```json
+{
+  "id": "service-1",
+  "title": "Cambio de aceite",
+  "description": "Servicio preventivo",
+  "status": "pendiente",
+  "createdAt": "2026-08-15T12:00:00.000Z",
+  "imageUri": "file://.../garagelink-service-images/service-image-123.jpg",
+  "location": {
+    "latitude": -33.4489,
+    "longitude": -70.6693
+  },
+  "synced": false
+}
+```
+
+Validaciones de carga:
+
+- si no hay datos, retorna lista vacía;
+- si el JSON base no es una lista, lanza error controlado;
+- si una lista contiene elementos inválidos, descarta solo esos elementos;
+- acepta registros con `imageUri` persistente;
+- acepta registros con `location` válida.
+
+---
+
+## 6. Cámara y persistencia de fotografías
+
+Dependencias:
+
+```text
+expo-camera ~57.0.3
+expo-file-system ~57.0.4
+```
+
+Archivos:
+
+```text
+src/screens/ServiceFormScreen.tsx
+src/services/imageService.ts
+__mocks__/expo-camera.tsx
+```
+
+Flujo implementado:
+
+```text
+Usuario pulsa Tomar foto
+  -> se muestra el bloque de cámara
+  -> usuario concede permiso
+  -> CameraView.takePictureAsync({ quality: 0.7 })
+  -> imageService.persistServiceImage(photo.uri)
+  -> se copia la imagen al directorio persistente
+  -> se guarda imageUri persistente en el registro
+```
+
+Directorio usado:
+
+```text
+Paths.document/garagelink-service-images/
+```
+
+Nombre generado:
+
+```text
+service-image-${Date.now()}.extension
+```
+
+Compatibilidad web:
+
+- en web se devuelve la URI original;
+- URIs no copiables como `data:image/...` se conservan sin intentar copiar;
+- esto evita romper el flujo web de Expo.
+
+Manejo de errores:
+
+- si no hay URI de foto, el servicio puede guardarse sin imagen;
+- si falla la cámara, el servicio puede guardarse sin imagen;
+- si falla `expo-file-system`, el servicio puede guardarse sin imagen;
+- el usuario recibe mensaje claro en la interfaz.
+
+---
+
+## 7. GPS
+
+Dependencia:
+
+```text
+expo-location ~57.0.10
+```
+
+Archivo:
+
+```text
+src/services/locationService.ts
+```
+
+Flujo implementado:
+
+```text
+Usuario pulsa Obtener ubicación
+  -> se solicita permiso foreground
+  -> si se concede, se obtiene ubicación actual
+  -> se guarda latitud y longitud en el registro
+  -> si se deniega o falla, se permite guardar sin GPS
+```
+
+Datos guardados:
+
+```ts
+location?: {
+  latitude: number;
+  longitude: number;
+}
+```
+
+La lista muestra las coordenadas asociadas al registro cuando existen.
+
+---
+
+## 8. API externa
+
+Archivo:
+
+```text
+src/services/apiService.ts
+```
+
+API usada:
+
+```text
+https://jsonplaceholder.typicode.com/todos
+```
+
+Funciones implementadas:
+
+- importar registros externos;
+- validar estructura de respuesta;
+- mapear tareas externas a registros de GarageLink;
+- descartar elementos inválidos;
+- sincronizar registros locales mediante `POST`;
+- marcar registros como sincronizados tras respuesta válida;
+- manejar errores HTTP;
+- manejar errores de red;
+- mantener registros locales si falla la API.
+
+La API es pública y demostrativa. JSONPlaceholder no persiste realmente cambios remotos; se usa para evidenciar comunicación externa, validación y manejo de errores.
+
+---
+
+## 9. Pruebas automatizadas
+
+Framework:
+
+```text
+jest
+jest-expo
+@testing-library/react-native
+```
+
+Comando:
+
+```bash
+npm test
+```
+
+Resultado verificado:
+
+```text
+Test Suites: 5 passed, 5 total
+Tests:       25 passed, 25 total
+Snapshots:   0 total
+```
+
+### Suites
+
+| Suite | Archivo | Casos cubiertos |
+|---|---|---|
+| Storage | `src/services/__tests__/storageService-test.ts` | sin datos, guardar, cargar, imageUri persistente, datos base inválidos, elementos inválidos. |
+| GPS | `src/services/__tests__/locationService-test.ts` | permiso concedido, permiso denegado, error de ubicación. |
+| API | `src/services/__tests__/apiService-test.ts` | importación exitosa, datos inválidos, HTTP error, error de red, sync exitosa, sync inválida. |
+| Cámara UI | `src/screens/__tests__/ServiceFormScreen-camera-test.tsx` | sección foto, permiso denegado, captura exitosa, error cámara, error persistencia. |
+| Imágenes | `src/services/__tests__/imageService-test.ts` | copia persistente nativa, compatibilidad web, error de copia, extensión por defecto. |
+
+### Verificación TypeScript
+
+Comando:
+
+```bash
+npx tsc --noEmit
+```
+
+Resultado verificado:
+
+```text
+sin errores
+```
+
+---
+
+## 10. Ejecución
+
+### Instalar dependencias
 
 ```bash
 npm install
 ```
 
----
-
-## Ejecutar la aplicación
+### Iniciar Expo
 
 ```bash
 npm start
 ```
 
----
+### Ejecutar en Android
 
-## Ejecutar en navegador
+```bash
+npm run android
+```
+
+### Ejecutar en iOS
+
+```bash
+npm run ios
+```
+
+### Ejecutar en web
 
 ```bash
 npm run web
 ```
 
-Posteriormente puede abrirse desde el navegador utilizando la URL mostrada por Expo.
+### Ejecutar TypeScript
 
----
-
-# 7. Historial de desarrollo
-
-El desarrollo quedó registrado mediante múltiples commits independientes, evidenciando el progreso del proyecto.
-
-```text
-Initial commit
-
-docs: agregar reglas del arnés agéntico
-
-feat: implementar flujo de bienvenida y login
-
-chore: agregar soporte de ejecución web
+```bash
+npx tsc --noEmit
 ```
 
-Cada commit representa una etapa específica del desarrollo, evitando concentrar todos los cambios en un único commit.
+### Ejecutar pruebas
+
+```bash
+npm test
+```
 
 ---
 
-# 8. Evidencias del arnés
+## 11. Relación con la rúbrica U2
 
-La siguiente tabla resume cómo el proyecto cumple los requisitos solicitados para el uso de un arnés agéntico.
+La rúbrica U2 evalúa periféricos, permisos, pruebas, API externa y seguridad/fiabilidad del manejo de datos.
 
-| Requisito solicitado | Evidencia |
-|----------------------|----------|
-| Herramienta de IA utilizada | OMP (Warp) + ChatGPT |
-| Archivos de contexto | `AGENTS.md` y `CLAUDE.md` |
-| Reglas del agente | `RULES.md` |
-| Prompt de planificación | `prompts/01-planificacion-inicial.md` |
-| Historial de desarrollo | Commits independientes en Git |
-| Código fuente | Carpeta `src/` |
+| Indicador de rúbrica | Evidencia en GarageLink U2 |
+|---|---|
+| Funcionalidades con periféricos | Cámara con `expo-camera`; GPS con `expo-location`; foto y ubicación asociadas a registros de servicio. |
+| Permisos de usuario | Cámara y ubicación se solicitan solo por acción del usuario; se manejan permisos denegados sin bloquear guardado. |
+| Pruebas de periféricos | Tests de GPS, cámara y persistencia de imagen; casos de éxito, denegación y error. |
+| Integración con servicios web/APIs | Importación desde JSONPlaceholder; sincronización con `POST`; validación de datos externos. |
+| Pruebas de API | Tests para éxito, HTTP error, error de red, datos inválidos y respuesta de sincronización inválida. |
+| Fiabilidad y manejo de datos | AsyncStorage valida registros; API descarta datos inválidos; errores no destruyen registros locales. |
+
+---
+
+## 12. Limitaciones conocidas
+
+- No existe backend propio.
+- No existe autenticación real contra servidor.
+- La sesión es local y demostrativa.
+- JSONPlaceholder no persiste realmente los datos sincronizados.
+- No hay sincronización en tiempo real.
+- No hay resolución de conflictos remotos.
+- No hay eliminación ni edición de registros existentes.
+- No hay limpieza automática de imágenes huérfanas si el usuario captura una foto y luego cancela el formulario.
+- La validación de credenciales no representa seguridad productiva.
+- La evidencia de permisos y periféricos debe complementarse con capturas o video en dispositivo físico para el informe final.
+
+---
+
+## 13. Historial de commits
+
+```text
+8f74776 Initial commit
+d1eb7de docs: agregar reglas del arnés agéntico
+6420209 feat: implementar flujo de bienvenida y login
+6ae71df chore: agregar soporte de ejecución web
+3efca96 docs: se agrega documentación del proyecto
+d1deb78 docs: adaptar arnés agentico para evaluacion unidad 2
+7faccc9 feat: implementar registros de servicio en memoria
+3a5f1a2 feat: agregar autenticacion local y cierre de sesion
+6d401b2 feat: agregar persistencia local con AsyncStorage
+852b768 feat: integrar ubicacion GPS en servicios
+07f76af feat: integrar camara en registros de servicio
+42e3afe feat: integrar importacion y sincronizacion con API
+c11e715 test: agregar pruebas automatizadas de la unidad 2
+21c4dce feat: agregar persistencia de fotografias de servicio
+```
+
+El historial muestra evolución incremental: documentación inicial, flujo base, registros, sesión, almacenamiento, GPS, cámara, API, pruebas y persistencia robusta de fotografías.
+
+---
+
+## 14. Arnés agéntico
+
+Archivos de contexto:
+
+```text
+AGENTS.md
+RULES.md
+CLAUDE.md
+prompts/01-planificacion-inicial.md
+```
+
+Reglas principales aplicadas:
+
+- mantener React Native, Expo SDK 57 y TypeScript;
+- no usar `any`;
+- no usar `@ts-ignore`;
+- no ocultar errores de TypeScript;
+- no instalar dependencias sin autorización;
+- no agregar backend propio sin autorización;
+- no realizar commits sin autorización;
+- ejecutar verificaciones después de cambios relevantes;
+- mantener código simple, explicable y acotado a la evaluación.
+
+Herramientas usadas durante el desarrollo:
+
+- OMP en Warp;
+- ChatGPT / Codex;
+- Expo SDK 57;
+- Jest y React Native Testing Library para pruebas.
