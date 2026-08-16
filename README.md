@@ -21,7 +21,7 @@ El proyecto usa React Native, Expo SDK 57 y TypeScript. No usa backend propio ni
 9. Pruebas automatizadas
 10. Ejecución
 11. Relación con la rúbrica U2
-12. Limitaciones conocidas
+11. Limitaciones conocidas
 13. Historial de commits
 14. Arnés agéntico
 
@@ -515,7 +515,7 @@ npm test
 ---
 
 
-## 12. Limitaciones conocidas
+## 11. Limitaciones conocidas
 
 - No existe backend propio.
 - No existe autenticación real contra servidor.
