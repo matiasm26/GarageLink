@@ -3,8 +3,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { FormInput } from '../components/FormInput';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { requestCurrentServiceLocation } from '../services/locationService';
 import { colors } from '../theme/colors';
-import type { ServiceRecordInput, ServiceStatus } from '../types/serviceRecord';
+import type { ServiceLocation, ServiceRecordInput, ServiceStatus } from '../types/serviceRecord';
 import { serviceStatusLabels } from '../types/serviceRecord';
 
 type ServiceFormScreenProps = {
@@ -16,6 +17,8 @@ type ServiceFormErrors = {
   title?: string;
   description?: string;
 };
+
+type LocationStatus = 'idle' | 'loading' | 'granted' | 'denied' | 'error';
 
 const statusOptions: ServiceStatus[] = ['pendiente', 'en_proceso', 'completado'];
 
@@ -38,6 +41,9 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<ServiceStatus>('pendiente');
   const [errors, setErrors] = useState<ServiceFormErrors>({});
+  const [location, setLocation] = useState<ServiceLocation | undefined>(undefined);
+  const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
+  const [locationMessage, setLocationMessage] = useState('La ubicación es opcional y se solicitará solo al pulsar el botón.');
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -47,6 +53,23 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
   const handleDescriptionChange = (value: string) => {
     setDescription(value);
     setErrors((currentErrors) => ({ ...currentErrors, description: undefined }));
+  };
+
+  const handleLocationPress = async () => {
+    setLocationStatus('loading');
+    setLocationMessage('Solicitando permiso y ubicación del dispositivo...');
+
+    const result = await requestCurrentServiceLocation();
+
+    setLocationStatus(result.status);
+    setLocationMessage(result.message);
+
+    if (result.status === 'granted') {
+      setLocation(result.location);
+      return;
+    }
+
+    setLocation(undefined);
   };
 
   const handleSubmit = () => {
@@ -59,6 +82,7 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
 
     onSubmit({
       description: description.trim(),
+      location,
       status,
       title: title.trim(),
     });
@@ -110,6 +134,36 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
                 </Pressable>
               ))}
             </View>
+          </View>
+
+          <View style={styles.locationSection}>
+            <Text style={styles.statusLabel}>Ubicación GPS</Text>
+            <Text style={styles.locationHelp}>Guarda latitud y longitud del servicio si el usuario concede permiso.</Text>
+            <Pressable
+              disabled={locationStatus === 'loading'}
+              style={({ pressed }) => [
+                styles.locationButton,
+                pressed ? styles.locationButtonPressed : null,
+                locationStatus === 'loading' ? styles.locationButtonDisabled : null,
+              ]}
+              onPress={handleLocationPress}
+            >
+              <Text style={styles.locationButtonText}>Obtener ubicación</Text>
+            </Pressable>
+            <Text
+              style={[
+                styles.locationMessage,
+                locationStatus === 'granted' ? styles.locationMessageSuccess : null,
+                locationStatus === 'denied' || locationStatus === 'error' ? styles.locationMessageError : null,
+              ]}
+            >
+              {locationMessage}
+            </Text>
+            {location ? (
+              <Text style={styles.locationCoordinates}>
+                Latitud: {location.latitude.toFixed(5)} | Longitud: {location.longitude.toFixed(5)}
+              </Text>
+            ) : null}
           </View>
         </View>
 
@@ -187,5 +241,51 @@ const styles = StyleSheet.create({
   },
   statusOptionTextSelected: {
     color: colors.card,
+  },
+  locationSection: {
+    gap: 10,
+  },
+  locationHelp: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  locationButton: {
+    alignItems: 'center',
+    borderColor: colors.primary,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  locationButtonPressed: {
+    opacity: 0.82,
+  },
+  locationButtonDisabled: {
+    opacity: 0.56,
+  },
+  locationButtonText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  locationMessage: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  locationMessageSuccess: {
+    color: colors.success,
+    fontWeight: '700',
+  },
+  locationMessageError: {
+    color: colors.error,
+    fontWeight: '700',
+  },
+  locationCoordinates: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
   },
 });

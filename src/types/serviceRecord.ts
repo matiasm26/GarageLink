@@ -19,6 +19,7 @@ export type ServiceRecord = {
 export type ServiceRecordInput = {
   title: string;
   description: string;
+  location?: ServiceLocation;
   status: ServiceStatus;
 };
 

@@ -60,6 +60,11 @@ export function ServiceListScreen({ records, onCreateNew, onLogout, storageError
 
               <Text style={styles.recordDescription}>{record.description}</Text>
               <Text style={styles.recordMeta}>Creado: {new Date(record.createdAt).toLocaleDateString('es-CL')}</Text>
+              {record.location ? (
+                <Text style={styles.recordMeta}>
+                  Ubicación: {record.location.latitude.toFixed(5)}, {record.location.longitude.toFixed(5)}
+                </Text>
+              ) : null}
             </View>
           ))}
         </View>
