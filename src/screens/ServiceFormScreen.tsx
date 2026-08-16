@@ -5,6 +5,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { FormInput } from '../components/FormInput';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { requestCurrentServiceLocation } from '../services/locationService';
+import { persistServiceImage } from '../services/imageService';
 import { colors } from '../theme/colors';
 import type { ServiceLocation, ServiceRecordInput, ServiceStatus } from '../types/serviceRecord';
 import { serviceStatusLabels } from '../types/serviceRecord';
@@ -116,7 +117,16 @@ export function ServiceFormScreen({ onCancel, onSubmit }: ServiceFormScreenProps
         return;
       }
 
-      setImageUri(photo.uri);
+      setCameraMessage('Guardando foto...');
+
+      const persistedImage = await persistServiceImage(photo.uri);
+
+      if (persistedImage.status === 'error') {
+        setCameraMessage(`${persistedImage.message} Puedes guardar el servicio sin imagen.`);
+        return;
+      }
+
+      setImageUri(persistedImage.uri);
       setIsCameraVisible(false);
       setCameraMessage('Foto asociada al servicio.');
     } catch {

@@ -6,14 +6,25 @@ import {
   resetMockCamera,
   setMockCameraPermission,
 } from '../../../__mocks__/expo-camera';
+import { persistServiceImage } from '../../services/imageService';
 import { ServiceFormScreen } from '../ServiceFormScreen';
 import type { ServiceRecordInput } from '../../types/serviceRecord';
 
 jest.mock('expo-camera', () => jest.requireActual('../../../__mocks__/expo-camera'));
+jest.mock('../../services/imageService', () => ({
+  persistServiceImage: jest.fn(),
+}));
+
+const persistServiceImageMock = persistServiceImage as jest.MockedFunction<typeof persistServiceImage>;
 
 describe('ServiceFormScreen camera flow', () => {
   beforeEach(() => {
     resetMockCamera();
+    persistServiceImageMock.mockReset();
+    persistServiceImageMock.mockImplementation(async (sourceUri: string) => ({
+      status: 'success',
+      uri: sourceUri,
+    }));
   });
 
   test('muestra la sección de foto opcional', async () => {
@@ -50,13 +61,18 @@ describe('ServiceFormScreen camera flow', () => {
     const submitted = onSubmit.mock.calls[0]?.[0];
     expect(submitted?.title).toBe('Servicio sin cámara');
     expect(submitted?.imageUri).toBeUndefined();
+    expect(persistServiceImageMock).not.toHaveBeenCalled();
   });
 
-  test('asocia imageUri cuando la captura de cámara es exitosa', async () => {
+  test('asocia imageUri persistente cuando la captura de cámara es exitosa', async () => {
     const onCancel = jest.fn();
     const onSubmit = jest.fn<void, [ServiceRecordInput]>();
     setMockCameraPermission({ granted: true });
-    mockTakePictureAsync.mockResolvedValue({ uri: 'file://foto-servicio.jpg' });
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://foto-temporal.jpg' });
+    persistServiceImageMock.mockResolvedValue({
+      status: 'success',
+      uri: 'file://garagelink-service-images/foto-persistente.jpg',
+    });
 
     const screen = await render(<ServiceFormScreen onCancel={onCancel} onSubmit={onSubmit} />);
     const titleInput = await screen.findByPlaceholderText('Ej: Cambio de aceite');
@@ -73,9 +89,10 @@ describe('ServiceFormScreen camera flow', () => {
 
     await fireEvent.press(screen.getByText('Guardar servicio'));
 
+    expect(persistServiceImageMock).toHaveBeenCalledWith('file://foto-temporal.jpg');
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
-        imageUri: 'file://foto-servicio.jpg',
+        imageUri: 'file://garagelink-service-images/foto-persistente.jpg',
         title: 'Servicio con cámara',
       }),
     );
@@ -104,6 +121,37 @@ describe('ServiceFormScreen camera flow', () => {
 
     const submitted = onSubmit.mock.calls[0]?.[0];
     expect(submitted?.title).toBe('Servicio con error cámara');
+    expect(submitted?.imageUri).toBeUndefined();
+    expect(persistServiceImageMock).not.toHaveBeenCalled();
+  });
+
+  test('mantiene el guardado disponible si falla la persistencia de la foto', async () => {
+    const onCancel = jest.fn();
+    const onSubmit = jest.fn<void, [ServiceRecordInput]>();
+    setMockCameraPermission({ granted: true });
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://foto-temporal.jpg' });
+    persistServiceImageMock.mockResolvedValue({
+      status: 'error',
+      message: 'No se pudo guardar la foto de forma persistente.',
+    });
+
+    const screen = await render(<ServiceFormScreen onCancel={onCancel} onSubmit={onSubmit} />);
+    const titleInput = await screen.findByPlaceholderText('Ej: Cambio de aceite');
+    const descriptionInput = await screen.findByPlaceholderText('Describe brevemente el trabajo');
+
+    await fireEvent.changeText(titleInput, 'Servicio sin persistencia');
+    await fireEvent.changeText(descriptionInput, 'La foto no se pudo persistir');
+    await fireEvent.press(await screen.findByText('Tomar foto'));
+    await fireEvent.press(await screen.findByText('Capturar'));
+
+    await waitFor(() => {
+      screen.getByText('No se pudo guardar la foto de forma persistente. Puedes guardar el servicio sin imagen.');
+    });
+
+    await fireEvent.press(screen.getByText('Guardar servicio'));
+
+    const submitted = onSubmit.mock.calls[0]?.[0];
+    expect(submitted?.title).toBe('Servicio sin persistencia');
     expect(submitted?.imageUri).toBeUndefined();
   });
 });

@@ -48,6 +48,17 @@ describe('storageService', () => {
     await expect(loadServiceRecords()).resolves.toEqual([serviceRecord]);
   });
 
+  test('carga registros válidos con imageUri persistente', async () => {
+    const recordWithPersistentImage: ServiceRecord = {
+      ...serviceRecord,
+      imageUri: 'file://document/garagelink-service-images/service-image-1.jpg',
+    };
+
+    asyncStorageMock.getItem.mockResolvedValue(JSON.stringify([recordWithPersistentImage]));
+
+    await expect(loadServiceRecords()).resolves.toEqual([recordWithPersistentImage]);
+  });
+
   test('rechaza datos guardados que no son una lista', async () => {
     asyncStorageMock.getItem.mockResolvedValue(JSON.stringify({ id: 'service-1' }));
 
