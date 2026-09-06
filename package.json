@@ -23,7 +23,8 @@
     "jest": "~29.7.0",
     "jest-expo": "~57.0.4",
     "test-renderer": "^1.2.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "webdriverio": "^9.31.6"
   },
   "scripts": {
     "start": "expo start",
@@ -31,7 +32,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --runInBand",
-    "test:coverage": "jest --coverage --runInBand"
+    "test:coverage": "jest --coverage --runInBand",
+    "test:e2e:appium": "node e2e/appium-navigation.e2e.mjs"
   },
   "jest": {
     "preset": "jest-expo"
