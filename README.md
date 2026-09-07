@@ -1,10 +1,11 @@
-# GarageLink U2
+# GarageLink — Evaluación Unidad 3
 
-> Evaluación Unidad 2 - Desarrollo de Aplicaciones Móviles
+> Evaluación Unidad 3 - Desarrollo de Aplicaciones Móviles
 
-GarageLink es un prototipo móvil para registrar servicios de taller mecánico. La versión U2 amplía el flujo original de bienvenida e inicio de sesión con registros de servicio, persistencia local, cámara, GPS, importación/sincronización con API externa y pruebas automatizadas.
+GarageLink es una aplicación móvil para registrar servicios de taller mecánico. La versión actual mantiene el flujo de bienvenida e inicio de sesión y reúne autenticación local, gestión de servicios, persistencia local, cámara, GPS, consumo de API externa, pruebas unitarias y una prueba E2E con Appium.
 
-El proyecto usa React Native, Expo SDK 57 y TypeScript. No usa backend propio ni autenticación real contra servidor; mantiene el alcance educativo definido para la evaluación.
+El proyecto usa React Native, Expo SDK 57 y TypeScript. La arquitectura existente se conserva sin migración de framework ni backend propio.
+
 
 ---
 
@@ -20,7 +21,6 @@ El proyecto usa React Native, Expo SDK 57 y TypeScript. No usa backend propio ni
 8. API externa
 9. Pruebas automatizadas
 10. Ejecución
-11. Relación con la rúbrica U2
 11. Limitaciones conocidas
 12. Historial de commits
 13. Arnés agéntico
@@ -29,7 +29,7 @@ El proyecto usa React Native, Expo SDK 57 y TypeScript. No usa backend propio ni
 
 ## 1. Estado actual del proyecto
 
-GarageLink U2 implementa un flujo completo de uso local:
+GarageLink para Evaluación Unidad 3 implementa un flujo completo de uso local:
 
 ```text
 Bienvenida
@@ -77,7 +77,9 @@ GarageLink
 |
 |-- assets/
 |-- prompts/
-|
+|-- e2e/
+|   |-- appium-navigation.e2e.mjs
+
 |-- __mocks__/
 |   |-- expo-camera.tsx
 |
@@ -104,6 +106,7 @@ GarageLink
     |       |-- imageService-test.ts
     |       |-- locationService-test.ts
     |       |-- storageService-test.ts
+    |       |-- edgeCases-test.ts
     |
     |-- theme/
     |   |-- colors.ts
@@ -420,51 +423,69 @@ La API es pública y demostrativa. JSONPlaceholder no persiste realmente cambios
 
 ## 9. Pruebas automatizadas
 
+### Pruebas unitarias
+
 Framework:
 
 ```text
-jest
+Jest
 jest-expo
 @testing-library/react-native
 ```
 
-Comando:
+Comandos:
 
 ```bash
 npm test
+npm run test:coverage
 ```
 
 Resultado verificado:
 
 ```text
-Test Suites: 5 passed, 5 total
-Tests:       25 passed, 25 total
-Snapshots:   0 total
+Test Suites: 6 passed, 6 total
+Tests:       31 passed, 31 total
 ```
 
-### Suites
+Coverage global aproximado:
 
-| Suite | Archivo | Casos cubiertos |
-|---|---|---|
-| Storage | `src/services/__tests__/storageService-test.ts` | sin datos, guardar, cargar, imageUri persistente, datos base inválidos, elementos inválidos. |
-| GPS | `src/services/__tests__/locationService-test.ts` | permiso concedido, permiso denegado, error de ubicación. |
-| API | `src/services/__tests__/apiService-test.ts` | importación exitosa, datos inválidos, HTTP error, error de red, sync exitosa, sync inválida. |
-| Cámara UI | `src/screens/__tests__/ServiceFormScreen-camera-test.tsx` | sección foto, permiso denegado, captura exitosa, error cámara, error persistencia. |
-| Imágenes | `src/services/__tests__/imageService-test.ts` | copia persistente nativa, compatibilidad web, error de copia, extensión por defecto. |
+| Métrica | Resultado |
+|---|---:|
+| Statements | 85.27% |
+| Branches | 79.85% |
+| Functions | 92.10% |
+| Lines | 85.09% |
 
-### Verificación TypeScript
+La cobertura aproximada de `src/services/` es 96% en statements.
+
+Las pruebas cubren persistencia y validación de registros, permisos y errores de GPS, persistencia de imágenes, importación y sincronización con API, validaciones de datos externos y flujo de cámara mediante mocks.
+
+### Pruebas E2E
+
+La prueba E2E utiliza Appium, UiAutomator2 y WebdriverIO sobre Expo Go.
+
+```text
+Emulador: Pixel 7
+Android: 14
+API: 34
+Dispositivo: emulator-5554
+```
 
 Comando:
+
+```bash
+npm run test:e2e:appium
+```
+
+La prueba valida una navegación básica desde la pantalla de bienvenida de GarageLink, pulsando `Comenzar`, hasta la pantalla de inicio de sesión, con Appium conectado a `127.0.0.1:4723`.
+
+### Verificación TypeScript
 
 ```bash
 npx tsc --noEmit
 ```
 
-Resultado verificado:
-
-```text
-sin errores
-```
+Resultado verificado: sin errores.
 
 ---
 
@@ -512,11 +533,24 @@ npx tsc --noEmit
 npm test
 ```
 
+### Coverage unitario
+
+```bash
+npm run test:coverage
+```
+
+### E2E con Appium
+
+Requiere Metro/Expo iniciado, GarageLink abierto en Expo Go, Appium en `127.0.0.1:4723` y el emulador `emulator-5554` disponible.
+
+```bash
+npm run test:e2e:appium
+```
+
 ---
 
 
 ## 11. Limitaciones conocidas
-
 - No existe backend propio.
 - No existe autenticación real contra servidor.
 - La sesión es local y demostrativa.

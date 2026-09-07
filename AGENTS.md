@@ -1,4 +1,4 @@
-# AGENTS.md — GarageLink U2
+# AGENTS.md — GarageLink Evaluación Unidad 3
 
 ## Documentación obligatoria
 
@@ -10,13 +10,14 @@ https://docs.expo.dev/versions/v57.0.0/
 
 No utilizar APIs, configuraciones ni recomendaciones correspondientes a versiones anteriores de Expo.
 
-Para funcionalidades de la Unidad 2, revisar también la documentación versionada o vigente de los módulos Expo que se usen:
+Para funcionalidades de la Evaluación Unidad 3, revisar la documentación versionada o vigente de los módulos Expo que se usen:
 
 - Cámara: `expo-camera`.
 - Ubicación/GPS: `expo-location`.
 - Almacenamiento local: preferir una solución simple y compatible con Expo SDK 57.
 - APIs externas: usar `fetch` nativo salvo que exista una razón justificada para otra herramienta.
-- Pruebas: usar herramientas simples, mantenibles y justificadas para el alcance evaluativo.
+- Pruebas unitarias: usar Jest, `jest-expo` y Testing Library según el alcance.
+- Pruebas E2E: mantener Appium, UiAutomator2 y WebdriverIO sin romper la configuración existente.
 
 ## Contexto del proyecto
 
@@ -30,7 +31,7 @@ La Evaluación U1 implementó una entrada simple al sistema:
 - Validaciones visuales.
 - Retroalimentación al intentar iniciar sesión.
 
-La Evaluación U2 debe evolucionar ese prototipo hacia una aplicación móvil más completa, manteniendo el dominio de talleres mecánicos y priorizando los criterios de la rúbrica:
+La Evaluación Unidad 3 mantiene y valida ese prototipo evolucionado, conservando el dominio de talleres mecánicos y priorizando confiabilidad, pruebas unitarias, coverage y debugging/E2E.
 
 - Interacción con periféricos del dispositivo.
 - Gestión segura y clara de permisos.
@@ -39,7 +40,7 @@ La Evaluación U2 debe evolucionar ese prototipo hacia una aplicación móvil m�
 - Comunicación con servicios web y APIs.
 - Pruebas de funcionalidades críticas.
 
-## Objetivo funcional U2
+## Objetivo funcional actual
 
 La aplicación debe permitir gestionar registros simples asociados a servicios o tareas de taller.
 
@@ -69,9 +70,9 @@ No convertir archivos a JavaScript.
 
 No utilizar Flutter, Ionic ni otros frameworks móviles.
 
-## Alcance esperado para U2
+## Alcance actual de la aplicación
 
-La evolución debe agregar únicamente lo necesario para cumplir la evaluación:
+La aplicación implementa el siguiente alcance funcional, que debe conservarse y extenderse solo cuando sea necesario:
 
 1. Cámara
    - Capturar una imagen desde el dispositivo.
@@ -106,7 +107,18 @@ La evolución debe agregar únicamente lo necesario para cumplir la evaluación:
    - Probar integración con API mediante casos controlados.
    - Documentar pruebas manuales para cámara, GPS y flujo completo en dispositivo o navegador cuando aplique.
 
-## Prioridad según rúbrica U2
+## Pruebas automatizadas actuales
+
+- La suite unitaria usa Jest con `jest-expo` y Testing Library.
+- El estado validado es 6 suites y 31 tests aprobados.
+- El coverage se ejecuta con `npm run test:coverage` y debe mostrar Statements, Branches, Functions y Lines.
+- La prueba E2E usa Appium, UiAutomator2 y WebdriverIO contra Expo Go.
+- El escenario E2E actual valida la navegación desde bienvenida hasta inicio de sesión.
+- El emulador documentado es `emulator-5554` (Pixel 7, Android 14, API 34).
+- Appium debe estar disponible en `127.0.0.1:4723`.
+- Ejecutar la prueba con `npm run test:e2e:appium`.
+
+## Prioridad de la Evaluación Unidad 3
 
 El desarrollo debe maximizar evidencia en estos indicadores:
 
@@ -126,7 +138,7 @@ El agente debe:
 2. Leer `RULES.md`.
 3. Revisar la estructura existente del proyecto.
 4. Proponer una solución breve antes de implementarla.
-5. Crear únicamente lo necesario para cumplir la Evaluación U2.
+5. Crear únicamente lo necesario para cumplir la Evaluación Unidad 3.
 6. Priorizar código simple y fácil de explicar.
 7. Evitar dependencias innecesarias.
 8. Justificar cualquier dependencia nueva antes de instalarla.
@@ -134,6 +146,7 @@ El agente debe:
 10. No eliminar código funcional sin justificación.
 11. Informar qué archivos creó o modificó.
 12. No realizar commits sin autorización del usuario.
+13. No cambiar versiones de Expo SDK, React Native o React sin una razón explícita, compatibilidad documentada y autorización.
 
 ## Reglas de TypeScript
 
@@ -163,9 +176,12 @@ type SyncState = 'idle' | 'loading' | 'success' | 'error';
 
 ## Verificación esperada
 
-Antes de entregar cambios funcionales futuros, se debe verificar:
+Antes de entregar cambios funcionales futuros, se debe verificar como mínimo:
 
 - TypeScript con `npx tsc --noEmit`.
+- Pruebas unitarias con `npm test -- --runInBand`.
+- Coverage con `npm run test:coverage` cuando se modifique lógica cubierta.
+- Prueba E2E con `npm run test:e2e:appium` cuando se modifique el flujo E2E o la configuración Appium.
 - Flujo manual principal de la app.
 - Permisos de cámara y GPS.
 - Creación de registro con imagen y ubicación.

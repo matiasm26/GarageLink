@@ -1,6 +1,6 @@
-# GarageLink U2 - Reglas del Proyecto
+# GarageLink — Reglas del Proyecto (Evaluación Unidad 3)
 
-Estas reglas aplican a cualquier cambio realizado en GarageLink durante la evolución a Evaluación Unidad 2.
+Estas reglas aplican a cualquier cambio realizado en GarageLink durante la Evaluación Unidad 3 y conservan las restricciones válidas de la Evaluación Unidad 2.
 
 ## Tecnología obligatoria
 
@@ -31,15 +31,15 @@ Estas reglas aplican a cualquier cambio realizado en GarageLink durante la evolu
 ## Dependencias
 
 - No instalar dependencias sin autorización explícita.
-- Justificar cualquier dependencia nueva con el criterio de la Evaluación U2 que habilita.
+- Justificar cualquier dependencia nueva con el criterio de la evaluación que habilita.
 - No agregar librerías grandes de navegación, UI, formularios, validación, backend o estado global si la funcionalidad puede resolverse de forma simple.
 - Para cámara y GPS, preferir módulos Expo compatibles con SDK 57.
 - Para almacenamiento local, preferir una opción simple, mantenible y compatible con Expo.
 - Para APIs externas, usar `fetch` nativo salvo necesidad concreta.
 
-## Alcance funcional U2
+## Alcance funcional actual
 
-La aplicación debe evolucionar el prototipo U1 hacia un flujo simple de gestión de servicios o tareas de taller.
+La aplicación mantiene un flujo simple de gestión de servicios o tareas de taller, con autenticación local, persistencia, cámara, GPS e integración con API externa.
 
 El alcance funcional permitido incluye:
 
@@ -76,7 +76,7 @@ Evitar:
 
 ## Almacenamiento local
 
-- Persistir solo datos necesarios para el flujo U2.
+- Persistir solo datos necesarios para el flujo actual de evaluación.
 - Mantener estructura de datos simple y versionable.
 - Manejar errores de lectura y escritura.
 - Cargar datos al iniciar la aplicación.
@@ -106,6 +106,19 @@ Evitar:
 - Mantener pruebas deterministas y fáciles de ejecutar.
 - Complementar con pruebas manuales para cámara, GPS y flujo completo en dispositivo o navegador.
 
+- Las pruebas unitarias usan Jest con `jest-expo` y Testing Library cuando corresponda.
+- Ejecutar `npm test -- --runInBand` para la suite unitaria completa.
+- Ejecutar `npm run test:coverage` y revisar Statements, Branches, Functions y Lines.
+- Las pruebas deben verificar comportamiento observable, errores, valores inválidos y casos límite; no crear tests artificiales solo para elevar coverage.
+
+## Pruebas E2E con Appium
+
+- Mantener la prueba E2E compatible con Expo Go, Appium, UiAutomator2 y WebdriverIO.
+- Usar el emulador documentado `emulator-5554` (Pixel 7, Android 14, API 34) cuando esté disponible.
+- Ejecutar `npm run test:e2e:appium` con Appium escuchando en `127.0.0.1:4723`.
+- Preferir selectores estables basados en texto o accesibilidad y cerrar siempre la sesión WebDriver.
+- No confundir una prueba E2E de navegación con autenticación remota o persistencia remota.
+
 ## Control de cambios
 
 - No realizar commits sin autorización explícita.
@@ -115,6 +128,8 @@ Evitar:
 
 ## Verificación
 
+- Para la prueba E2E, confirmar que Metro/Expo Go, Appium y el emulador estén disponibles antes de diagnosticar un fallo de selectors.
+- No cambiar versiones de Expo SDK, React Native o React sin una razón explícita, compatibilidad documentada y autorización.
 - Ejecutar `npx tsc --noEmit` después de cambios importantes en TypeScript.
 - Ejecutar las pruebas disponibles después de agregar o modificar lógica cubierta por pruebas.
 - Cuando se cambie la interfaz, indicar cómo probar manualmente el flujo afectado.
