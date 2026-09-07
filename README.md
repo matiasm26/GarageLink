@@ -567,23 +567,29 @@ npm run test:e2e:appium
 ## 12. Historial de commits
 
 ```text
-8f74776 Initial commit
-d1eb7de docs: agregar reglas del arnés agéntico
-6420209 feat: implementar flujo de bienvenida y login
-6ae71df chore: agregar soporte de ejecución web
-3efca96 docs: se agrega documentación del proyecto
-d1deb78 docs: adaptar arnés agentico para evaluacion unidad 2
-7faccc9 feat: implementar registros de servicio en memoria
-3a5f1a2 feat: agregar autenticacion local y cierre de sesion
-6d401b2 feat: agregar persistencia local con AsyncStorage
-852b768 feat: integrar ubicacion GPS en servicios
-07f76af feat: integrar camara en registros de servicio
-42e3afe feat: integrar importacion y sincronizacion con API
-c11e715 test: agregar pruebas automatizadas de la unidad 2
+cce1d4b docs: update project documentation for evaluation unit 3
+9cb9761 test: add Appium E2E navigation test
+f93466e test: improve unit tests and add coverage
+6713042 docs: corregir numeracion final del README
+3ceabff docs: corregir numeracion de limitaciones
+25ca679 docs: simplificar README de GarageLink U2
+f8fe336 docs: actualizar documentacion final de GarageLink U2
 21c4dce feat: agregar persistencia de fotografias de servicio
+c11e715 test: agregar pruebas automatizadas de la unidad 2
+42e3afe feat: integrar importacion y sincronizacion con API
+07f76af feat: integrar camara en registros de servicio
+852b768 feat: integrar ubicacion GPS en servicios
+6d401b2 feat: agregar persistencia local con AsyncStorage
+3a5f1a2 feat: agregar autenticacion local y cierre de sesion
+7faccc9 feat: implementar registros de servicio en memoria
+d1deb78 docs: adaptar arnés agentico para evaluacion unidad 2
+3efca96 docs: se agrega documentación del proyecto
+6ae71df chore: agregar soporte de ejecución web
+6420209 feat: implementar flujo de bienvenida y login
+d1eb7de docs: agregar reglas del arnés agéntico
 ```
 
-El historial muestra evolución incremental: documentación inicial, flujo base, registros, sesión, almacenamiento, GPS, cámara, API, pruebas y persistencia robusta de fotografías.
+El historial muestra la evolución incremental hasta la Evaluación Unidad 3: flujo base, registros, autenticación local, almacenamiento, GPS, cámara, API, pruebas unitarias con coverage, prueba E2E con Appium y actualización documental.
 
 ---
 
